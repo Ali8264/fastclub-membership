@@ -132,4 +132,41 @@ public SubscriptionResponse upgradeSubscription(String subscriptionId, String ne
 }
 
 
+@Override
+@Transactional
+public SubscriptionResponse downgradeSubscription(String subscriptionId, String newTierId) {
+
+    Subscription subscription = subscriptionRepository.findById(subscriptionId)
+            .orElseThrow(() -> new RuntimeException("Subscription not found"));
+
+    if (!subscription.getStatus().equals("ACTIVE")) {
+        throw new RuntimeException("Only ACTIVE subscriptions can be downgraded");
+    }
+
+    Tier newTier = tierRepository.findById(newTierId)
+            .orElseThrow(() -> new RuntimeException("Invalid tierId"));
+
+    int oldTier = Integer.parseInt(subscription.getTierId());
+    int upcomingTier = Integer.parseInt(newTierId);
+
+    // Downgrade must be to a LOWER tier
+    if (upcomingTier >= oldTier) {
+        throw new RuntimeException("Downgrade must be to a lower tier");
+    }
+
+    // Save downgrade
+    subscription.setTierId(newTierId);
+    Subscription saved = subscriptionRepository.save(subscription);
+
+    return SubscriptionResponse.builder()
+            .subscriptionId(saved.getId())
+            .userId(saved.getUserId())
+            .planId(saved.getPlanId())
+            .tierId(saved.getTierId())
+            .status(saved.getStatus())
+            .startDate(saved.getStartDate().toString())
+            .expiryDate(saved.getExpiryDate().toString())
+            .build();
+}
+
 }
