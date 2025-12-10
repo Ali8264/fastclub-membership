@@ -1,7 +1,9 @@
 package com.fastclub.membership.controller;
 
+import com.fastclub.membership.dto.DowngradeRequest;
 import com.fastclub.membership.dto.SubscribeRequest;
 import com.fastclub.membership.dto.SubscriptionResponse;
+import com.fastclub.membership.dto.UpgradeRequest;
 import com.fastclub.membership.service.SubscriptionService;
 
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +26,18 @@ public class SubscriptionController {
     @GetMapping("/users/{userId}")
 public SubscriptionResponse getActiveSubscription(@PathVariable String userId) {
     return subscriptionService.getActiveSubscription(userId);
+}
+
+@PostMapping("/{subscriptionId}/upgrade")
+public SubscriptionResponse upgrade(@PathVariable String subscriptionId,
+                                    @RequestBody UpgradeRequest request) {
+    return subscriptionService.upgradeSubscription(subscriptionId, request.getNewTierId());
+}
+
+@PostMapping("/{subscriptionId}/downgrade")
+public SubscriptionResponse downgrade(@PathVariable String subscriptionId,
+                                      @RequestBody DowngradeRequest request) {
+    return subscriptionService.downgradeSubscription(subscriptionId, request.getNewTierId());
 }
 
 }
