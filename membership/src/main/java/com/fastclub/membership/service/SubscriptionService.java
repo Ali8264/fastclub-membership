@@ -6,4 +6,6 @@ import com.fastclub.membership.dto.SubscriptionResponse;
 public interface SubscriptionService {
     SubscriptionResponse subscribe(SubscribeRequest request);
     SubscriptionResponse getActiveSubscription(String userId);
+    SubscriptionResponse upgradeSubscription(String subscriptionId, String newTierId);
+
 }

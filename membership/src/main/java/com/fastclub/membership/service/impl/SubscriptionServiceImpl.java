@@ -3,10 +3,12 @@ package com.fastclub.membership.service.impl;
 import com.fastclub.membership.adapter.BillingAdapter;
 import com.fastclub.membership.domain.Plan;
 import com.fastclub.membership.domain.Subscription;
+import com.fastclub.membership.domain.Tier;
 import com.fastclub.membership.dto.SubscribeRequest;
 import com.fastclub.membership.dto.SubscriptionResponse;
 import com.fastclub.membership.repository.PlanRepository;
 import com.fastclub.membership.repository.SubscriptionRepository;
+import com.fastclub.membership.repository.TierRepository;
 import com.fastclub.membership.service.SubscriptionService;
 
 import org.springframework.stereotype.Service;
@@ -20,14 +22,17 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private final SubscriptionRepository subscriptionRepository;
     private final PlanRepository planRepository;
     private final BillingAdapter billingAdapter;
+    private final TierRepository tierRepository;
 
-    public SubscriptionServiceImpl(SubscriptionRepository subscriptionRepository,
-                                   PlanRepository planRepository,
-                                   BillingAdapter billingAdapter) {
-        this.subscriptionRepository = subscriptionRepository;
-        this.planRepository = planRepository;
-        this.billingAdapter = billingAdapter;
-    }
+public SubscriptionServiceImpl(SubscriptionRepository subscriptionRepository,
+                               PlanRepository planRepository,
+                               TierRepository tierRepository,
+                               BillingAdapter billingAdapter) {
+    this.subscriptionRepository = subscriptionRepository;
+    this.planRepository = planRepository;
+    this.tierRepository = tierRepository;
+    this.billingAdapter = billingAdapter;
+}
 
     @Override
     @Transactional
@@ -87,5 +92,44 @@ public SubscriptionResponse getActiveSubscription(String userId) {
             .expiryDate(subscription.getExpiryDate().toString())
             .build();
 }
+
+@Override
+@Transactional
+public SubscriptionResponse upgradeSubscription(String subscriptionId, String newTierId) {
+
+    Subscription subscription = subscriptionRepository.findById(subscriptionId)
+            .orElseThrow(() -> new RuntimeException("Subscription not found"));
+
+    if (!subscription.getStatus().equals("ACTIVE")) {
+        throw new RuntimeException("Only ACTIVE subscriptions can be upgraded");
+    }
+
+    Tier newTier = tierRepository.findById(newTierId)
+            .orElseThrow(() -> new RuntimeException("Invalid tierId"));
+
+    // Basic Upgrade Validation
+    int oldTier = Integer.parseInt(subscription.getTierId());
+    int upcomingTier = Integer.parseInt(newTierId);
+
+    if (upcomingTier <= oldTier) {
+        throw new RuntimeException("Upgrade must be to a higher tier");
+    }
+
+    // Upgrade in DB
+    subscription.setTierId(newTierId);
+
+    Subscription saved = subscriptionRepository.save(subscription);
+
+    return SubscriptionResponse.builder()
+            .subscriptionId(saved.getId())
+            .userId(saved.getUserId())
+            .planId(saved.getPlanId())
+            .tierId(saved.getTierId())
+            .status(saved.getStatus())
+            .startDate(saved.getStartDate().toString())
+            .expiryDate(saved.getExpiryDate().toString())
+            .build();
+}
+
 
 }
