@@ -40,4 +40,9 @@ public SubscriptionResponse downgrade(@PathVariable String subscriptionId,
     return subscriptionService.downgradeSubscription(subscriptionId, request.getNewTierId());
 }
 
+@PostMapping("/{subscriptionId}/cancel")
+public SubscriptionResponse cancel(@PathVariable String subscriptionId) {
+    return subscriptionService.cancelSubscription(subscriptionId);
+}
+
 }

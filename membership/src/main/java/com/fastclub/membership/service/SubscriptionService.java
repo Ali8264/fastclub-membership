@@ -8,5 +8,6 @@ public interface SubscriptionService {
     SubscriptionResponse getActiveSubscription(String userId);
     SubscriptionResponse upgradeSubscription(String subscriptionId, String newTierId);
     SubscriptionResponse downgradeSubscription(String subscriptionId, String newTierId);
+SubscriptionResponse cancelSubscription(String subscriptionId);
 
 }
