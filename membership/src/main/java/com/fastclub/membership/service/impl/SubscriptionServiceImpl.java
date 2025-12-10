@@ -169,4 +169,31 @@ public SubscriptionResponse downgradeSubscription(String subscriptionId, String 
             .build();
 }
 
+@Override
+@Transactional
+public SubscriptionResponse cancelSubscription(String subscriptionId) {
+
+    Subscription subscription = subscriptionRepository.findById(subscriptionId)
+            .orElseThrow(() -> new RuntimeException("Subscription not found"));
+
+    if (!subscription.getStatus().equals("ACTIVE")) {
+        throw new RuntimeException("Only ACTIVE subscriptions can be cancelled");
+    }
+
+    subscription.setStatus("CANCELLED");
+
+    Subscription saved = subscriptionRepository.save(subscription);
+
+    return SubscriptionResponse.builder()
+            .subscriptionId(saved.getId())
+            .userId(saved.getUserId())
+            .planId(saved.getPlanId())
+            .tierId(saved.getTierId())
+            .status(saved.getStatus())
+            .startDate(saved.getStartDate().toString())
+            .expiryDate(saved.getExpiryDate().toString())
+            .build();
+}
+
+
 }
